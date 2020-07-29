@@ -10,6 +10,11 @@ void createGraph(int &n, int &m, int &maxDegree, int &minDegree, int** h_degree,
     cin >> n;
     cout << "Enter number of edges\n";
     cin >> m;
+    int k = ((n * (n - 1)) / 2);
+    if(k < m){
+        cout << "Too many edges...making it complete graph." << endl;
+        m = k;
+    }
     cout << "Enter 0 for random and 1 for manual graph" << endl;
     cin >> ch;
     vector<set<int>> adj(n);
@@ -35,6 +40,8 @@ void createGraph(int &n, int &m, int &maxDegree, int &minDegree, int** h_degree,
             int u = rand() % n;
             int v = rand() % n;
             if(adj[u].find(v) != adj[u].end())
+                continue;
+            if(u == v)
                 continue;
             adj[u].insert(v);
             adj[v].insert(u);
@@ -62,6 +69,7 @@ void createGraph(int &n, int &m, int &maxDegree, int &minDegree, int** h_degree,
     } 
     minDegree = mn;
     maxDegree = mx;
+    cout << "Max degree is : " << mx << " and Min degree is : " << mn << endl;
 }
 
 __global__ void assignWeightKernel(int n, int k, int weight, int* d_adj, int* d_adj_p, bool* d_visited, int* d_weights)
@@ -117,15 +125,16 @@ void assignWeight(int n, int* d_adj, int* d_adj_p, int* h_weights, bool* h_visit
     int k = 1;
     int weight = 1;
     int cnt = 1;
-    int mx = max(n, 512);
-    while(cnt!=0)
+    int mx = min(n, 512);
+
+    while(cnt != 0)
     {
         assignWeightKernel<<<mx,mx>>>(n, k, weight, d_adj, d_adj_p, d_visited, d_weights);
         cudaDeviceSynchronize();
         cudaMemcpy(h_visited, d_visited, sizeof(bool) * n, cudaMemcpyDeviceToHost);
 
         cnt = 0;
-        for(int i=0;i<n;i++)
+        for(int i = 0;i < n; i++)
         {
             if(!h_visited[i])
                 cnt++;
@@ -183,7 +192,7 @@ int main()
     cudaMemcpy(d_weights, h_weights, sizeof(int) * n, cudaMemcpyHostToDevice);
     cudaMemcpy(d_colors, h_colors, sizeof(int) * n, cudaMemcpyHostToDevice);
    
-    int mx = max(n,512);
+    int mx = min(n,512);
     for(int i = max_wt; i>=1; i--)
     {
         cudaMemcpy(d_sameWt, h_sameWt, sizeof(bool) * n, cudaMemcpyHostToDevice);
@@ -192,4 +201,10 @@ int main()
     cudaMemcpy(h_colors, d_colors, sizeof(int) * n, cudaMemcpyDeviceToHost);
     // for(int i=0;i<n;i++)
     //     cout << "Color of " << i << "is" << h_colors[i] << endl;
+
+    cudaFree(d_adj);
+    cudaFree(d_adj_p);
+    cudaFree(d_colors);
+    cudaFree(d_sameWt);
+    cudaFree(d_weights);
 }
