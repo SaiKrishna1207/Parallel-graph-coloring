@@ -19,6 +19,12 @@ The serial implementation for the algorithm is an iterative greedy algorithm tha
 ## Dependencies
 CUDA (10.x or higher)
 
+## Achieved Speedup : 
+For random graphs of 10000 vertices and 1000000 edges, computed on an Nvidia 130MX GPU, the following speedups were achieved over the serial implementation: 
+- Jones-Plassmann Algorithm : 3.75x
+- Largest Degree First : 3.28x
+- Smallest Degree Last : 3.07x 
+
 ## Contributors
 - [Dhanwin Rao](https://github.com/dhanwin247)
 - [Sai Krishna Anand](https://github.com/SaiKrishna1207)
